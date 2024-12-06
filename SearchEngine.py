@@ -9,7 +9,7 @@ from spellchecker import SpellChecker
 
 # MongoDB connection
 client = pymongo.MongoClient()
-db = client['CPP3']
+db = client['CPP_Biology']
 faculty_collection = db['FacultyInfo']
 inverted_index_collection = db['InvertedIndex']
 embeddings_collection = db['Embeddings']
