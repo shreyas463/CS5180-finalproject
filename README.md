@@ -4,11 +4,11 @@ Final Project for CS5180-Information Retrieval
 
 ## To run it, follow the following steps:
 
-1- install the required libraries: pip install beautiful soup, pymongo, regex, pyspellchecker, spacy, and the en_core-lg 
+1- install the required libraries: pip install beautifulSoup, pymongo, regex, pyspellchecker, spacy, and the en_core-lg 
 
 
 
-### Order to run it:
+### Order to run the search engine:
 
 
 

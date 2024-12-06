@@ -5,13 +5,13 @@ from collections import defaultdict
 
 # MongoDB connection setup
 client = MongoClient('mongodb://localhost:27017/')
-db = client['CPP3']
-faculty_collection = db['faculty_info']
-inverted_index_collection = db['inverted_index']
-embeddings_collection = db['embeddings']
+db = client['CPP_Biology']
+faculty_collection = db['FacultyInfo']
+inverted_index_collection = db['InvertedIndex']
+embeddings_collection = db['Embeddings']
 
 # File path for saving the trained TF-IDF vectorizer
-VECTORIZER_FILE = "vectorizer.pkl"
+TFIDF_PKL_FILE = "tfidf_vectorizer.pkl"
 
 
 def generate_index_and_store_embeddings():
@@ -67,9 +67,9 @@ def save_vectorizer(vectorizer):
         vectorizer (TfidfVectorizer): Fitted TF-IDF vectorizer.
     """
     print("Saving vectorizer...")
-    with open(VECTORIZER_FILE, 'wb') as f:
+    with open(TFIDF_PKL_FILE, 'wb') as f:
         pickle.dump(vectorizer, f)
-    print(f"Vectorizer saved to {VECTORIZER_FILE}.")
+    print(f"Vectorizer saved to {TFIDF_PKL_FILE}.")
 
 
 def build_inverted_index(tfidf_matrix, terms, doc_ids):

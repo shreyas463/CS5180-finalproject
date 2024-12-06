@@ -63,7 +63,7 @@ class Crawler:
         self.frontier = Frontier(baseurl)
         self.visited = set()  # Track visited URLs
         db = self.connectToMongoDB()
-        self.pages = db['pages']  # Reference to the MongoDB collection
+        self.crawledPages = db['CrawledPages']  # Reference to the MongoDB collection
 
     def connectToMongoDB(self):
         """
@@ -71,7 +71,7 @@ class Crawler:
         Returns:
             MongoClient: A MongoDB database object.
         """
-        DB_NAME = "CPP3"
+        DB_NAME = "CPP_Biology"
         DB_HOST = "localhost"
         DB_PORT = 27017
         try:
@@ -81,7 +81,7 @@ class Crawler:
         except:
             print("Database not connected successfully")
         # Remove all existing documents in the collection
-        self.pages.delete_many({})
+        self.crawledPages.delete_many({})
 
     # --- Utility Methods ---
     def retrievHTML(self, url):
@@ -100,19 +100,21 @@ class Crawler:
             print(f"Error fetching {url}: {e}")
             return None
 
-    def savePage(self, url, html):
+    def savePage(self, url, html, is_target):
         """
-        Saves a web page's URL and HTML content to the MongoDB collection.
+        Saves a web page's URL, HTML content, and target flag to the MongoDB collection.
         Args:
             url (str): The URL of the page.
             html (str): The HTML content of the page.
+            is_target (bool): Whether the page is a target page or not.
         """
         entry = {
-            'url': url,
-            'isTarget': False,
+            'url': url.strip(),
+            'isTarget': is_target,
             'html': html,
         }
-        self.pages.insert_one(entry)
+        self.crawledPages.insert_one(entry)
+
 
     def parseForLinks(self, bs):
         """
@@ -138,7 +140,7 @@ class Crawler:
                Displays all documents stored in the 'pages' MongoDB collection.
                Useful for debugging and verifying stored data.
                """
-        for document in self.pages.find():
+        for document in self.crawledPages.find():
             pprint.pprint(document)
 
     # --- Target Identification Methods ---
@@ -151,34 +153,6 @@ class Crawler:
             Tag or None: The matched element if found, otherwise None.
         """
         return bs.find('div', {'class': 'fac-info'})
-
-    def target_page(self, match_target_element):
-        """
-        Determines if the page is a target based on the presence of the desired element.
-        Args:
-            match_target_element (Tag): The element to match.
-        Returns:
-            bool: True if the page is a target, False otherwise.
-        """
-        return match_target_element
-
-    def flagTargetPage(self, url):
-        """
-        Marks a web page as a target and processes its navigation links.
-        Updates the MongoDB entry for the page and stores navigation content.
-        Args:
-            url (str): The URL of the target page.
-        """
-        # Retrieve the page document from MongoDB
-        page = self.pages.find_one({'url': url})
-        if not self.isValidPage(page, url):
-            return
-
-        html = page['html']
-        soup = BeautifulSoup(html, 'html.parser')
-
-        self.markPageAsTarget(url)
-        self.processNavigationLinks(soup, url)
 
     def isValidPage(self, page, url):
         """
@@ -193,15 +167,6 @@ class Crawler:
             print(f"No HTML content found for target page: {url}")
             return False
         return True
-
-    def markPageAsTarget(self, url):
-        """
-        Marks the page as a target in the MongoDB collection.
-        Args:
-            url (str): The URL of the target page.
-        """
-        self.pages.update_one({'url': url}, {'$set': {'isTarget': True}})
-        print(f"Target page flagged: {url}")
 
     def processNavigationLinks(self, soup, url):
         """
@@ -264,6 +229,7 @@ class Crawler:
         """
         tempUrl = None
         if not url.endswith('/'):
+            # special case for professor Steve Alas
             if '.' not in url.split('/')[-1]:
                 tempUrl = url + '/'
         return urljoin(tempUrl, link) if tempUrl else urljoin(url, link)
@@ -276,7 +242,7 @@ class Crawler:
             link (str): The navigation link.
             nav_html (str): The HTML content of the navigation link.
         """
-        self.pages.update_one(
+        self.crawledPages.update_one(
             {'url': parent_url},
             {'$set': {f'nav_links.{link}': BeautifulSoup(
                 nav_html, 'html.parser').prettify()}}
@@ -308,10 +274,15 @@ class Crawler:
                 continue
 
             bs = BeautifulSoup(html, 'html.parser')
-            self.savePage(url, bs.prettify())
+            # Check if the page is a target
+            is_target = bool(self.match_target_element(bs))
+            
+            # Save the page with the determined isTarget flag
+            self.savePage(url, bs.prettify(), is_target)
 
-            if self.target_page(self.match_target_element(bs)):
-                self.flagTargetPage(url)
+            # Process the target page if applicable
+            if is_target:
+                self.processNavigationLinks(bs, url.strip())
                 targets_found += 1
 
             if targets_found == num_targets:

@@ -12,7 +12,7 @@ def connectDataBase():
        Ensures the database is accessible before proceeding with data extraction.
        Returns the database object for further operations.
        """
-    DB_NAME = 'CPP3'
+    DB_NAME = 'CPP_Biology'
     DB_HOST = 'localhost'
     DB_PORT = 27017
     try:
@@ -256,14 +256,14 @@ if __name__ == '__main__':
 
     # Retrieve the 'pages' collection from the database.
     # This collection stores the HTML content and metadata of crawled web pages.
-    pages_collection = db['pages']
+    pages_collection = db['CrawledPages']
 
-    # Retrieve the 'faculty_info' collection from the database.
+    # Retrieve the 'FacultyInfo' collection from the database.
     # This collection is used to store structured data about faculty members extracted from web pages.
-    faculty_collection = db['faculty_info']
+    faculty_collection = db['FacultyInfo']
 
     # Process and extract data from faculty pages marked as targets.
-    # The extracted data is structured and saved into the 'faculty_info' collection.
+    # The extracted data is structured and saved into the 'FacultyInfo' collection.
     handle_faculty_pages(pages_collection, faculty_collection)
 
     # Print a message indicating that the parsing process is complete.

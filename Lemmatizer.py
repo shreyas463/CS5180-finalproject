@@ -8,8 +8,8 @@ nlp = spacy.load("en_core_web_lg")
 
 # MongoDB connection
 client = MongoClient('mongodb://localhost:27017/')
-db = client['CPP3']  # Replace with your database name
-faculty_collection = db['faculty']  # Replace with your collection name
+db = client['CPP_Biology']  
+faculty_collection = db['FacultyInfo'] 
 
 
 def normalize_phone_number(phone_number):
