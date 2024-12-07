@@ -151,7 +151,8 @@ def extract_faculty_details(bs, url):
         }
 
     title_dept = fac_info.find('span', class_='title-dept').get_text(strip=True) if fac_info.find('span', class_='title-dept') else "Not Available"
-    name = fac_info.h1.get_text(strip=True) if fac_info.h1 else "Not Available"
+    name = fac_info.h1.get_text(strip=True) if fac_info.h1 else fac_info.get_text(strip=True).split("\n")[0]
+
     email = fac_info.find('a', {'href': re.compile(r'mailto:')}).get_text(strip=True) if fac_info.find('a', {'href': re.compile(r'mailto:')}) else "Not Available"
     phone = fac_info.find('p', class_='phoneicon').get_text(strip=True) if fac_info.find('p', class_='phoneicon') else "Not Available"
     image_url = extract_image_url(fac_info, url)

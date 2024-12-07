@@ -72,14 +72,28 @@ def compute_similarity_scores(query_vector, candidate_docs):
 
 def fetch_document_details(doc_id, similarity):
     faculty_details = faculty_collection.find_one({"_id": ObjectId(doc_id)})
+    name = faculty_details.get("faculty_name", "Name not available")
     professor_url = faculty_details.get("profile_url", "URL not available")
-    summary = faculty_details.get("summary", "Info not available")
+    faculty_info = faculty_details.get("faculty_info", "No faculty info available")
+
+    # Remove newlines and excess spaces
+    cleaned_info = " ".join(faculty_info.replace("\n", " ").split())
+
+    # Shorten the snippet length (e.g., 100 characters)
+    snippet_length = 60
+    snippet = cleaned_info[:snippet_length] + "..." if len(cleaned_info) > snippet_length else cleaned_info
+
+
+
     return {
         "document_id": doc_id,
-        "similarity": similarity,
+        "name": name,
         "url": professor_url,
-        "summary": summary
+        "similarity": similarity,
+        "snippet": snippet  # Include the snippet
     }
+
+
 
 # Pagination
 def paginate_results(results, page, page_size=5):
@@ -158,6 +172,7 @@ def display_results_page(paginated_results, page, total_pages):
         name = result.get('name', 'N/A')
         url = result.get('url', 'N/A')
         similarity = result.get('similarity', 0)
+        snippet = result.get('snippet', 'No snippet available')
 
         # Format the URL as a clickable link if supported by the terminal
         if url != 'N/A':
@@ -168,6 +183,7 @@ def display_results_page(paginated_results, page, total_pages):
         print(f"{idx}. Name: {name}")
         print(f"   URL: {formatted_url}")
         print(f"   Similarity: {similarity:.2f}")
+        print(f"   Snippet: {snippet}")
         print("-" * 80)
 
                 
