@@ -20,12 +20,12 @@ def normalize_phone_number(phone_number):
     return re.sub(r'[^0-9]', '', phone_number)
 
 
-def lemmatize_text(fac):
+def lemmatize_text(text):
     """
     Lemmatize text using spaCy and clean it, but exclude phone numbers.
     """
     # Allow letters, numbers, whitespace, '@', and '.'; remove other characters
-    text = re.sub(r'[^a-zA-Z0-9\s@.]', '', fac)
+    text = re.sub(r'[^a-zA-Z0-9\s@.]', '', text)
 
     # Use regex to find phone numbers (e.g., formats like 123-456-7890 or (123) 456-7890)
     phone_number_pattern = r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}'
@@ -54,19 +54,22 @@ def process_faculty_data():
     Fetch data, lemmatize, and update MongoDB.
     """
     for doc in faculty_collection.find():
+        # Get the existing text (from parsed HTML or cleaned data)
         raw_text = doc.get("faculty_info", "")
-        if raw_text:
-            # Perform lemmatization
-            lemmatized_text = lemmatize_text(raw_text)
 
-            # Update faculty_info with lemmatized text
-            faculty_collection.update_one(
-                {"_id": doc["_id"]},
-                {"$set": {"faculty_info": lemmatized_text, "lem_data": lemmatized_text}}
-            )
-            print(f"Lemmatized text updated for document ID: {doc['_id']}")
-        else:
-            print(f"No raw text found for document ID: {doc['_id']}")
+        # Extract plain text if HTML exists
+        plain_text = BeautifulSoup(
+            raw_text, 'html.parser').get_text() if raw_text else ""
+
+        # Lemmatize the text
+        lemmatized_text = lemmatize_text(plain_text)
+
+        # Update MongoDB with lemmatized text
+        faculty_collection.update_one(
+            {"_id": doc["_id"]},
+            {"$set": {"faculty_info": lemmatized_text}}
+        )
+        print(f"Updated document ID {doc['_id']} with lemmatized text.")
 
 
 if __name__ == "__main__":
